@@ -85,9 +85,7 @@ with PdfPages("03_output_analysis/Token Count Charts - FLORES200.pdf") as pdf:
             
         axs0_max = 2
         axs1_max = 2
-        i = 0
-        j = 0
-
+   
         fig, axs = plt.subplots(axs0_max, axs1_max, figsize = (14,14))
         fig.suptitle("Differences in Token Cost Across Languages\nModel: " + model + "\nData: FLORES-200 dev")
         

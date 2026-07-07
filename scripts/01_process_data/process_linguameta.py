@@ -22,14 +22,6 @@ if not PROJECT_ROOT:
 os.chdir(PROJECT_ROOT)
 
 
-# %% Project folder
-load_dotenv()
-PROJECT_ROOT = os.getenv("PROJECT_ROOT")
-if not PROJECT_ROOT:
-    raise EnvironmentError("PROJECT_ROOT is not set. Check your .env file.")
-os.chdir(PROJECT_ROOT)
-
-
 # %% Read linguameta data
 linguameta = pd.read_table("00_data_raw/linguameta/linguameta.tsv")
 
