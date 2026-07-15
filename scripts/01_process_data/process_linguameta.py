@@ -56,6 +56,15 @@ assert all(linguameta.loc[linguameta["iso_639_3_code"].isin(fill_list), "estimat
 
 for iso, speakers in iso_speakers.items():
     linguameta.loc[linguameta["iso_639_3_code"] == iso, "estimated_number_of_speakers"] = speakers
+    # filling missing speaker counts
+
+linguameta = linguameta.rename(columns = {"iso_639_3_code": "iso_639_3", 
+                                          "english_name": "name", 
+                                          "estimated_number_of_speakers": "speakers"})
+    # shorten column names
+
+linguameta = linguameta[["iso_639_3", "name", "speakers"]]
+    # keep subset of columns
 
 
 # %% Write cleaned linguameta data to TSV
