@@ -17,7 +17,7 @@ os.chdir(PROJECT_ROOT)
 
 
 # %% Read data
-macro_df = pd.read_table("00_data_raw/iso-639-3/iso-639-3-macrolanguages.tab", na_filter = False)
+macro_df = pd.read_table("00_data_raw/iso_639_3/iso-639-3-macrolanguages.tab", na_filter = False)
 
 
 # %% Clean data

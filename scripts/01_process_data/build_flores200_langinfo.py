@@ -28,10 +28,6 @@ flores200_dev[["iso_639_3", "script"]] = flores200_dev["iso_script"].str.split("
 flores200_langs = flores200_dev.drop(columns = ["filetype", "text"])   
 assert flores200_langs["iso_script"].is_unique
 
-flores200_langs = flores200_langs.loc[flores200_langs["iso_639_3"] != "ajp",]
-    # exclude ajp from analysis (see process_metalingua.py for rationale)
-    # TODO: move this exclusion to "script/01_process_data/process_flores200.py"
-
 
 # %% Read macrolanguage mappings
 macro = pd.read_csv("01_data_processed/macrolanguage_mappings.csv")

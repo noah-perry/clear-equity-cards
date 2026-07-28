@@ -17,7 +17,7 @@ os.chdir(PROJECT_ROOT)
 
 
 # %% Read data
-cc = pd.read_csv("00_data_raw/commoncrawl/languages.csv", na_filter = True)
+cc = pd.read_csv("00_data_raw/commoncrawl/languages.csv", keep_default_na = False, na_values = [""])
 
 
 # %% Clean data
@@ -38,9 +38,9 @@ cc_last = cc_last.sort_values(by = "pages", ascending = False, ignore_index = Tr
 cc_last["cc_rank"] = cc_last.index + 1
     # rank languages by number of pages crawled, ranking starts at 1
 
-cc_last = cc_last.rename(columns = {"primary_language": "iso_639_3"})
-cc_last = cc_last[["iso_639_3", "cc_rank"]]
+cc_last = cc_last.rename(columns = {"primary_language": "iso_639_3", "pages": "cc_pages"})
+cc_last = cc_last[["iso_639_3", "cc_pages", "cc_rank"]]
 
 
 # %% Write data
-cc_last.to_csv("01_data_processed/commoncrawl_language_ranking.csv", index = False)
+cc_last.to_csv("01_data_processed/commoncrawl_clean.csv", index = False)
