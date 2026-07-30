@@ -25,6 +25,17 @@ chosen_models = pd.read_table("00_data_raw/clear_benchmarking_team/LLM CLEAR She
 chosen_models = chosen_models.rename(columns = {"Link": "link", 
                                                 "Release Date / Last Update": "release_date_str"})
 
+added_models = [
+    {"link": "https://huggingface.co/CohereLabs/c4ai-command-a-03-2025",      "release_date_str": "March 2025"},
+    {"link": "https://huggingface.co/CohereLabs/command-a-plus-05-2026-bf16", "release_date_str": "May 2026"},
+    {"link": "https://huggingface.co/openai/gpt-oss-20b",                     "release_date_str": "August 2025"},
+    {"link": "https://huggingface.co/facebook/nllb-200-3.3B",                 "release_date_str": "July 2022"},
+    ]
+
+added_models = pd.DataFrame(added_models)
+
+chosen_models = pd.concat([chosen_models, added_models], ignore_index = True)
+
 # Extract model from Hugging Face link
 chosen_models["model"] = chosen_models["link"].str.replace("https://huggingface.co/", "")
 chosen_models[["organization", "model_name"]] = chosen_models["model"].str.split("/" , expand = True)
@@ -35,29 +46,32 @@ chosen_models["release_date"] = pd.to_datetime(chosen_models["release_date_str"]
 # Drop unneeded columns
 chosen_models = chosen_models[["model", "organization", "model_name", "release_date"]]
 
+# Make tokenizer_repo_id column
+llama2_list = ["apple/OpenELM-1_1B-Instruct", "apple/OpenELM-3B-Instruct"]
+
+chosen_models["tokenizer_repo_id"] = chosen_models["model"]
+chosen_models.loc[chosen_models["model"].isin(llama2_list), "tokenizer_repo_id"] = "meta-llama/Llama-2-7b-hf"
+    # special case: tokenizer file not included in model repo, get tokenizer from other repo
+
 # Make tokenizer_file column
-no_tokenizer_list = ["apple/OpenELM-1_1B-Instruct", "apple/OpenELM-3B-Instruct"]
 tiktoken_list = ["moonshotai/Kimi-Linear-48B-A3B-Instruct", "moonshotai/Moonlight-16B-A3B-Instruct"]
 
 chosen_models["tokenizer_file"] = "tokenizer.json"
-chosen_models.loc[chosen_models["model"].isin(no_tokenizer_list), "tokenizer_file"] = None
 chosen_models.loc[chosen_models["model"].isin(tiktoken_list), "tokenizer_file"] = "tiktoken.model"
-    # based on Hugging Face model repos
+    # special case: tokenizer.json not include in model repo, get other file
 
 
 # %% Hash each model's tokenizer file
 results = []
 for row_index, row_data in chosen_models.iterrows():
     model = row_data["model"]
+    tokenizer_repo_id = row_data["tokenizer_repo_id"]
     tokenizer_file = row_data["tokenizer_file"]
-
-    if pd.isna(tokenizer_file):
-        result_i = {"model": model, "tokenizer_hash": None}
-    else:
-        path = hf_hub_download(model, filename = tokenizer_file)
-        tokenizer_hash = hashlib.sha256(open(path, "rb").read()).hexdigest()
-        result_i = {"model": model, "tokenizer_hash": tokenizer_hash}
     
+    path = hf_hub_download(repo_id = tokenizer_repo_id, filename = tokenizer_file)
+    tokenizer_hash = hashlib.sha256(open(path, "rb").read()).hexdigest()
+    result_i = {"model": model, "tokenizer_hash": tokenizer_hash}
+
     results.append(result_i)
 
     tokenizer_hashes = pd.DataFrame(results)
@@ -91,22 +105,20 @@ chosen_models = chosen_models.sort_values(by = ["tokenizer_hash", "release_date"
 chosen_models["dup"] = chosen_models["tokenizer_hash"].duplicated(keep = "last")
     # For each tokenizer, keep model with latest release date. Break ties using model (keep last in sort order)
 
-include_models = chosen_models.loc[chosen_models["dup"] == False,]
-    # Models to include in token cost experiments
+chosen_tokenizers = chosen_models.loc[chosen_models["dup"] == False, ["tokenizer_repo_id", "tokenizer_hash"]]
+    # Tokenizers to include in token cost experiments
 
-exclude_models = chosen_models.loc[chosen_models["dup"] == True,].groupby("tokenizer_hash").agg(models_sharing_tokenizer = ("model_name", list))
-exclude_models = exclude_models.reset_index(drop = False)
-    # Models in chosen list that will be excluded from token cost experiment since they have the same tokenizer as another model
+models_by_tokenizer = chosen_models.groupby("tokenizer_hash").agg(model_list = ("model_name", list))
+models_by_tokenizer = models_by_tokenizer.reset_index(drop = False)
 
-model_groups = pd.merge(left = include_models, right = exclude_models, how = "outer", on = "tokenizer_hash")
-    # each row per group of models with the same tokenizer
+tokenizer_groups = pd.merge(left = chosen_tokenizers, right = models_by_tokenizer, how = "outer", on = "tokenizer_hash")
+    # each row corresponds to a group of models with the same tokenizer
 
-model_groups = model_groups[["model", "models_sharing_tokenizer"]]
-model_groups = model_groups.sort_values(by = "model", ignore_index = True)
+tokenizer_groups = tokenizer_groups[["tokenizer_repo_id", "model_list"]]
 
 
 # %% Write to TSV file
-assert model_groups["model"].str.contains("\t").sum() == 0
-assert model_groups["models_sharing_tokenizer"].str.contains("\t").sum() == 0
+assert tokenizer_groups["tokenizer_repo_id"].str.contains("\t").sum() == 0
+assert tokenizer_groups["model_list"].str.contains("\t").sum() == 0
 
-model_groups.to_csv("01_data_processed/benchmarking_team_models_by_tokenizer.tsv", sep = "\t", index = False)
+tokenizer_groups.to_csv("01_data_processed/hf_models_by_tokenizer.tsv", sep = "\t", index = False)

@@ -20,29 +20,23 @@ if not PROJECT_ROOT:
 os.chdir(PROJECT_ROOT)
 
 
-# %% Models and data to use
-hf_model_list = ["Qwen/Qwen3.6-35B-A3B", 
-                 "microsoft/phi-4", 
-                 "google/gemma-4-31B-it", 
-                 "ibm-granite/granite-4.1-30b", 
-                 "deepseek-ai/DeepSeek-R1-Distill-Qwen-32B", 
-                 "deepseek-ai/DeepSeek-R1-Distill-Llama-70B",
-                 "meta-llama/Llama-3.3-70B-Instruct",
-                 "CohereLabs/tiny-aya-base",
-                 "openai/gpt-oss-20b",
-                 "mistralai/Ministral-3-14B-Instruct-2512",
-                 "facebook/nllb-200-3.3B"]
+# %% Lists of tokenizers to use
+hf_models = pd.read_table("01_data_processed/hf_models_by_tokenizer.tsv")
+hf_model_list = hf_models["tokenizer_repo_id"].tolist()
+
+hf_remote_code_list = ["moonshotai/Kimi-Linear-48B-A3B-Instruct"]
+    # requires `trust_remote_code = True` to run
 
 openai_model_list = ["gpt-5"]
 
-anthropic_model_list = ["claude-opus-4-8", 
-                        "claude-fable-5"]
+anthropic_model_list = ["claude-fable-5"]
+    # "claude-opus-4-8" appears to have same tokenizer
 
-google_model_list = ["gemini-2.5-pro",
-                     "gemini-3.1-pro-preview",
-                     "gemini-3.5-flash"]
+google_model_list = ["gemini-3.5-flash"]
+    # gemini-2.5-pro and gemini-3.1-pro-preview appear to have same tokenizer
 
-# Data: FLORES-200 dev
+
+# %% Read FLORES-200 dev data
 flores200_dev = pd.read_table("01_data_processed/flores200_dev.tsv")
 
 # %% Loop through each model and get token counts
@@ -50,8 +44,11 @@ results = []
 
 # Hugging Face open-source models
 for model in hf_model_list:
-    print(f"Working on model: {model}") 
-    tokenizer = AutoTokenizer.from_pretrained(model)
+    print(f"Working on model: {model}")
+    if model in hf_remote_code_list:
+        tokenizer = AutoTokenizer.from_pretrained(model, trust_remote_code = True)
+    else:
+        tokenizer = AutoTokenizer.from_pretrained(model)
 
     for row_index, row_data in flores200_dev.iterrows():
         file = row_data["file"]
