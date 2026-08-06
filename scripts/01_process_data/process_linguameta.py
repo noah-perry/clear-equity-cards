@@ -28,30 +28,30 @@ linguameta = pd.read_table("00_data_raw/linguameta/linguameta.tsv", keep_default
 
 # %% Clean linguameta data
 # Add missing languages
-assert all(linguameta["iso_639_3_code"] != "san")
+assert all( linguameta["iso_639_3_code"] != "san" )
     # Sanskrit is not in linguameta but is included in FLORES-200
 
 new_row = pd.DataFrame({"iso_639_3_code": ["san"], 
                         "english_name": ["Sanskrit"], 
-                        "estimated_number_of_speakers": [31420]})
+                        "estimated_number_of_speakers": [31_420]})
     # speaker figure based on https://ethnologue.com/language/san
 
 linguameta = pd.concat([linguameta, new_row], ignore_index=True)
 
 # Fill in estimated number of speakers when missing for FLORES-200 languages 
-iso_speakers = {"aeb":  12500000, # https://en.wikipedia.org/wiki/Tunisian_Arabic
-                "apc":  60000000, # https://en.wikipedia.org/wiki/Levantine_Arabic
-                "arb": 335000000, # https://en.wikipedia.org/wiki/Modern_Standard_Arabic
-                "crh":    580000, # https://en.wikipedia.org/wiki/Crimean_Tatar_language
-                "gaz":  26372150, # https://ethnologue.com/language/gaz
-                "kmr":  17000000, # https://en.wikipedia.org/wiki/Kurmanji
-                "plt":   7549210, # https://ethnologue.com/language/plt
-                "swh":  97300000, # https://en.wikipedia.org/wiki/Swahili
-                "tgl":  87000000, # https://en.wikipedia.org/wiki/Tagalog_language
-                "zsm":  34000000, # based on population of Malaysia, https://en.wikipedia.org/wiki/Malaysia 
+iso_speakers = {"aeb":  12_500_000, # https://en.wikipedia.org/wiki/Tunisian_Arabic
+                "apc":  60_000_000, # https://en.wikipedia.org/wiki/Levantine_Arabic
+                "arb": 335_000_000, # https://en.wikipedia.org/wiki/Modern_Standard_Arabic
+                "crh":     580_000, # https://en.wikipedia.org/wiki/Crimean_Tatar_language
+                "gaz":  26_372_150, # https://ethnologue.com/language/gaz
+                "kmr":  17_000_000, # https://en.wikipedia.org/wiki/Kurmanji
+                "plt":   7_549_210, # https://ethnologue.com/language/plt
+                "swh":  97_300_000, # https://en.wikipedia.org/wiki/Swahili
+                "tgl":  87_000_000, # https://en.wikipedia.org/wiki/Tagalog_language
+                "zsm":  34_000_000, # based on population of Malaysia, https://en.wikipedia.org/wiki/Malaysia 
                }
 fill_list = list(iso_speakers.keys())
-assert all(linguameta.loc[linguameta["iso_639_3_code"].isin(fill_list), "estimated_number_of_speakers"].isna())
+assert all( linguameta.loc[linguameta["iso_639_3_code"].isin(fill_list), "estimated_number_of_speakers"].isna() )
     # confirming that all languages where the speaker figure will be replaced currently have missing values in "estimated_number_of_speakers"
 
 for iso, speakers in iso_speakers.items():
@@ -59,10 +59,19 @@ for iso, speakers in iso_speakers.items():
     # filling missing speaker counts
 
 # Correct estimated number of speakers where incorrect
-assert linguameta.loc[linguameta["iso_639_3_code"] == "lvs", "estimated_number_of_speakers"].item() == 1
+assert all( linguameta.loc[linguameta["iso_639_3_code"] == "lvs", "estimated_number_of_speakers"] == 1 )
     # population of speakers for Standard Latvian [lvs] is 1
-linguameta.loc[linguameta["iso_639_3_code"] == "lvs", "estimated_number_of_speakers"] = 2041430
+linguameta.loc[linguameta["iso_639_3_code"] == "lvs", "estimated_number_of_speakers"] = 2_041_430
     # corrected speaker figure based on https://ethnologue.com/language/lvs
+
+assert all( linguameta.loc[linguameta["iso_639_3_code"].isin(["azj", "azb"]), "estimated_number_of_speakers"] == 24_000_000 )
+    # population of speakers for North Azerbaijani [azj] and South Azerbaijani [azb] is the same
+linguameta.loc[linguameta["iso_639_3_code"] == "azj", "estimated_number_of_speakers"] = 10_339_420
+    # corrected speaker figure based on https://ethnologue.com/language/azj
+linguameta.loc[linguameta["iso_639_3_code"] == "azb", "estimated_number_of_speakers"] = 13_319_270
+    # corrected speaker figure based on https://ethnologue.com/language/azb
+
+
 
 linguameta = linguameta.rename(columns = {"iso_639_3_code": "iso_639_3", 
                                           "english_name": "name", 
