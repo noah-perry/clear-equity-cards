@@ -26,6 +26,9 @@ chosen_models = chosen_models.rename(columns = {"Link": "link",
                                                 "Release Date / Last Update": "release_date_str"})
 
 added_models = [
+    {"link": "https://huggingface.co/zai-org/GLM-5.2",                        "release_date_str": "June 2026"},
+    {"link": "https://huggingface.co/moonshotai/Kimi-K3",                     "release_date_str": "July 2026"},
+    {"link": "https://huggingface.co/deepseek-ai/DeepSeek-V4-Flash",          "release_date_str": "April 2026"},
     {"link": "https://huggingface.co/CohereLabs/c4ai-command-a-03-2025",      "release_date_str": "March 2025"},
     {"link": "https://huggingface.co/CohereLabs/command-a-plus-05-2026-bf16", "release_date_str": "May 2026"},
     {"link": "https://huggingface.co/openai/gpt-oss-20b",                     "release_date_str": "August 2025"},
@@ -54,7 +57,7 @@ chosen_models.loc[chosen_models["model"].isin(llama2_list), "tokenizer_repo_id"]
     # special case: tokenizer file not included in model repo, get tokenizer from other repo
 
 # Make tokenizer_file column
-tiktoken_list = ["moonshotai/Kimi-Linear-48B-A3B-Instruct", "moonshotai/Moonlight-16B-A3B-Instruct"]
+tiktoken_list = ["moonshotai/Kimi-Linear-48B-A3B-Instruct", "moonshotai/Moonlight-16B-A3B-Instruct", "moonshotai/Kimi-K3"]
 
 chosen_models["tokenizer_file"] = "tokenizer.json"
 chosen_models.loc[chosen_models["model"].isin(tiktoken_list), "tokenizer_file"] = "tiktoken.model"
