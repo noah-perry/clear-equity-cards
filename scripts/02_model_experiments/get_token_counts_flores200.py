@@ -24,7 +24,7 @@ os.chdir(PROJECT_ROOT)
 hf_models = pd.read_table("01_data_processed/hf_models_by_tokenizer.tsv")
 hf_model_list = hf_models["tokenizer_repo_id"].tolist()
 
-hf_remote_code_list = ["moonshotai/Kimi-Linear-48B-A3B-Instruct"]
+hf_remote_code_list = ["moonshotai/Kimi-K3"]
     # requires `trust_remote_code = True` to run
 
 openai_model_list = ["gpt-5"]
@@ -116,7 +116,28 @@ for model in google_model_list:
         
 results_df = pd.DataFrame(data = results)
 
-# Write results to CSV file
+
+# %% Add language info
+flores200_langinfo = pd.read_table("01_data_processed/flores200_langinfo.tsv", keep_default_na = False, na_values = [""])
+
+results_df = pd.merge(left = results_df, right = flores200_langinfo, how = "outer", on = "file", indicator = True)
+
+assert all(results_df["_merge"] == "both")
+    # confirming merge resulted in full match
+results_df = results_df.drop(columns = "_merge")
+
+assert results_df["speakers"].isna().sum() == 0
+    # no more missing values in "speakers" column
+
+
+# %% Write results to CSV file
+assert all(results_df.dtypes.isin(["str", "int64", "float64"]))
+    # confirming all columns are either of type str, int64, or float64
+for c in results_df.columns:
+    if results_df[c].dtype == "str":
+        assert results_df[c].str.contains(r",").sum() == 0
+    # confirming there are no commas in string columns - safe to save as CSV
+
 results_df.to_csv("02_output_model_experiments/token_counts_flores200.csv", index = False)
 
 
